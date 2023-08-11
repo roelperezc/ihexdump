@@ -1,16 +1,33 @@
 use std::u8;
 use std::u16;
 
-struct IHexLine {
+#[derive(Debug)]
+pub struct IHexLine {
     start_code: char,
     byte_count: u8,
     address: u16,
     record_type: RecordType,
     data: Vec<u8>,
-    checksum: u8,
+    pub checksum: u8,
 }
 
+impl IHexLine {
+    pub fn verify_checksum(&self) -> bool {
+        let mut sum: u8 = 0;
+        sum += self.byte_count;
+        sum += self.address as u8;
+        sum += (self.address >> 8) as u8;
+        sum += self.record_type.into_u8();
+        for data_byte in &self.data {
+            sum += *data_byte; 
+        }
+        let checksum = sum.wrapping_neg();
+    
+        checksum == self.checksum
+    }
+}
 
+#[derive(Debug)]
 enum RecordType {
     Data,
     EndOfFile,
@@ -20,9 +37,20 @@ enum RecordType {
     StartLinAddress,
 }
 
-pub fn parse_line(input: String) -> Result<String,()> {
+impl RecordType {
+    fn into_u8(&self) -> u8 {
+        match self {
+            RecordType::Data => 0,
+            RecordType::EndOfFile => 1,
+            RecordType::ExtendedSegAddress => 2,
+            RecordType::StartSegAddress => 3,
+            RecordType::ExtendedLinAddress => 4,
+            RecordType::StartLinAddress => 5,
+        }
+    }
+}
 
-    let input_string = input.as_str();
+pub fn parse_line(input_string: &str) -> Result<IHexLine,()> {
 
     // Start code (:)
     // TODO: Accept other start codes
@@ -49,12 +77,12 @@ pub fn parse_line(input: String) -> Result<String,()> {
     // Data
     let mut data: Vec<u8> = vec![];
     for _ in 0..byte_count {
-        parse_data_byte(&input_string[index..index+1], &mut data)?;
-        index += 1;
+        parse_data_byte(&input_string[index..index+2], &mut data)?;
+        index += 2;
     }
 
     // Checksum
-    let checksum = parse_checksum(&input_string[index..index+1])?;
+    let checksum = parse_checksum(&input_string[index..index+2])?;
 
     let ihex_line = IHexLine {
         start_code,
@@ -66,7 +94,7 @@ pub fn parse_line(input: String) -> Result<String,()> {
     };
 
 
-    Ok(input)
+    Ok(ihex_line)
 }
 
 
@@ -125,6 +153,16 @@ fn parse_checksum(input_string_checksum: &str) -> Result<u8,()> {
     }
 }
 
-fn verify_checksum(ihex_line: IHexLine) {
-    ()
+pub fn verify_checksum(ihex_line: &IHexLine) -> bool {
+    let mut sum: u8 = 0;
+    sum += ihex_line.byte_count;
+    sum += ihex_line.address as u8;
+    sum += (ihex_line.address >> 8) as u8;
+    sum += ihex_line.record_type.into_u8();
+    for data_byte in &ihex_line.data {
+        sum += *data_byte; 
+    }
+    let checksum = sum.wrapping_neg();
+
+    checksum == ihex_line.checksum
 }
