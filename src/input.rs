@@ -1,6 +1,9 @@
 use clap::Parser;
 use std::io;
 
+use crate::ihex;
+use crate::format;
+
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Config {
@@ -16,16 +19,6 @@ pub struct Config {
 pub fn parse_input(
     mut buffer: Box<dyn io::Read>,
     config: Config) {
-
-    let address = match config.address {
-        true => {()},
-        false => {()}
-    };
-
-    let ascii = match config.ascii {
-        true => {()},
-        false => {()}
-    };
 
     loop {
         match read_line(&mut buffer) {
@@ -54,5 +47,11 @@ fn read_line(buffer: &mut Box<dyn io::Read>) -> Result<String,()> {
 }
 
 fn output_line(input_line: String) {
-    println!("{}", input_line);
+
+    match ihex::parse_line(&input_line.as_str()) {
+        Ok(ihex_line) => {
+            println!("{}", format::ihex_format(&ihex_line));
+        },
+        Err(()) => println!("BAD LINE")
+    }
 }

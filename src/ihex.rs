@@ -3,11 +3,11 @@ use std::u16;
 
 #[derive(Debug)]
 pub struct IHexLine {
-    start_code: char,
-    byte_count: u8,
-    address: u16,
-    record_type: RecordType,
-    data: Vec<u8>,
+    pub start_code: char,
+    pub byte_count: u8,
+    pub address: u16,
+    pub record_type: RecordType,
+    pub data: Vec<u8>,
     pub checksum: u8,
 }
 
@@ -28,7 +28,7 @@ impl IHexLine {
 }
 
 #[derive(Debug)]
-enum RecordType {
+pub enum RecordType {
     Data,
     EndOfFile,
     ExtendedSegAddress,

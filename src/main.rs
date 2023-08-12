@@ -7,6 +7,10 @@ mod input;
 use input::Config;
 use input::parse_input;
 
+mod ihex;
+
+mod format;
+
 fn main() {
 
     let config = Config::parse();
